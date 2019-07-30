@@ -1,14 +1,24 @@
 cmake_minimum_required(VERSION 3.5)
 project(reiji VERSION 0.1.0 LANGUAGES CXX)
 
+# Thanks Pablo Arias for writing this excellent article:
+# https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
+
 add_library(reiji src/unique_shared_lib.cpp)
 
+# Target properties
 target_include_directories(reiji
     PUBLIC
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+target_link_libraries(reiji
+    PUBLIC
+        ${CMAKE_DL_LIBS}
+)
+
+# Installation instructions
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/Reiji)
 
@@ -18,10 +28,12 @@ install(TARGETS reiji
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
+# Make name of exported target 'Reiji' instead of 'reiji'
 set_target_properties(reiji PROPERTIES EXPORT_NAME Reiji)
 
 install(DIRECTORY /include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+# Export targets to a script
 install(EXPORT reiji-targets
     FILE ReijiTargets.cmake
     NAMESPACE Reiji::
