@@ -116,15 +116,10 @@ void unique_shared_lib::open(const char* filename) {
     // On Windows 8 and above, we might be compiled for a Metro/UWP app where
     // we cannot use ::LoadLibrary and must instead use ::LoadPackagedLibrary
     int len = ::MultiByteToWideChar(CP_ACP, 0, filename, -1, nullptr, 0);
-    auto wfilename = new(std::nothrow) wchar_t[len];
-    if (wfilename) {
-        (void)::MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, len);
-        _handle = ::LoadPackagedLibrary(wfilename, 0);
-        delete[] wfilename;
-    } else {
-        _error = "Failed to load library because of an allocation failure";
-        return;
-    }
+    auto wfilename = new wchar_t[len];
+    (void)::MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, len);
+    _handle = ::LoadPackagedLibrary(wfilename, 0);
+    delete[] wfilename;
 #   else
     _handle = ::LoadLibraryA(filename);
 #   endif
