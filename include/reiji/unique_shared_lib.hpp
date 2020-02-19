@@ -327,9 +327,11 @@ namespace detail {
         void close();
 
         template<typename T>
-        [[nodiscard]] inline reiji::symbol<T> symbol(const char* sym_name);
+        [[nodiscard]]
+        inline reiji::symbol<T> symbol(const char* sym_name) noexcept;
         template<typename T>
-        [[nodiscard]] inline reiji::symbol<T> symbol(const std::string& sym_name);
+        [[nodiscard]]
+        inline reiji::symbol<T> symbol(const std::string& sym_name) noexcept;
 
         [[nodiscard]] std::string error() const;
     private:
@@ -355,7 +357,7 @@ namespace detail {
     };
 
     template<typename T>
-    inline symbol<T> unique_shared_lib::symbol(const char* sym_name) {
+    inline symbol<T> unique_shared_lib::symbol(const char* sym_name) noexcept {
         return symbol {
             reinterpret_cast<T>(_symbol(sym_name)),
             _next_uid(),
@@ -364,7 +366,7 @@ namespace detail {
     }
 
     template<typename T>
-    inline symbol<T> unique_shared_lib::symbol(const std::string& sym_name) {
+    inline symbol<T> unique_shared_lib::symbol(const std::string& sym_name) noexcept {
         return symbol<T>(sym_name.c_str());
     }
 } // reiji
