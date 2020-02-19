@@ -12,12 +12,298 @@
 #   include <windows.h>
 #endif
 
+// Customization points for symbol beaviour
+#ifdef REIJI_SYMBOL_THROW_EXCEPTIONS
+#   define REIJI_ON_INVALID_SYMBOL() \
+        do { \
+            throw reiji::bad_symbol_access{}; \
+        } while(0)
+#   define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 0
+#elif defined REIJI_SYMBOL_ABORT
+#   include <cstdlib>
+#   define REIJI_ON_INVALID_SYMBOL() \
+        do { \
+            std::abort(); \
+        } while(0)
+#define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 1
+// if neither macro is defined, we simply check if exceptions are enabled and choose
+// one of the previous models
+#elif defined(__EXCEPTIONS)
+#   define REIJI_ON_INVALID_SYMBOL() \
+        do { \
+            throw reiji::bad_symbol_access{}; \
+        } while(0)
+#   define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 0
+#else
+#   include <cstdlib>
+#   define REIJI_ON_INVALID_SYMBOL() \
+        do { \
+            std::abort(); \
+        } while(0)
+#define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 1
+#endif
+
+#include <cstdint>
 #include <string>
+#include <stdexcept>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace reiji {
-    class unique_shared_lib {
 
+class unique_shared_lib;
+
+namespace detail {
+    class sym {
+    protected:
+        void remove_self() noexcept;
+        bool is_valid() const noexcept {
+            return _uid && _origin;
+        }
+
+        void move_into_self_from(sym& other) noexcept {
+            _uid = other._uid;
+            other._uid = 0;
+            _origin = other._origin;
+            other._origin = nullptr;
+        };
+        sym(std::uint64_t uid, reiji::unique_shared_lib* origin)
+            noexcept : _uid{uid}, _origin{origin} {}
+
+        int compare(const sym& other) const noexcept {
+            if (_uid < other._uid) {
+                return -1;
+            } else if (_uid > other._uid) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        bool share_origin(const sym& other) const noexcept {
+            return _origin == other._origin;
+        }
+
+    private:
+        friend class reiji::unique_shared_lib;
+
+        void invalidate() noexcept {
+            _uid = 0;
+            _origin = nullptr;
+        }
+
+        std::uint64_t _uid;
+        reiji::unique_shared_lib* _origin;
+    };
+}
+
+    class bad_symbol_access : std::runtime_error {
+    public:
+        bad_symbol_access()
+            : runtime_error {"Symbols cannot outlive their origin"} {}
+        virtual ~bad_symbol_access() noexcept = default;
+    };
+
+    template <typename T>
+    class symbol final : private detail::sym {
+    public:
+        using element_type = T;
+        using pointer = element_type*;
+        using const_pointer = const element_type*;
+        using reference = element_type&;
+        using const_reference = const element_type&;
+
+        symbol() = delete;
+        symbol(const symbol&) = delete;
+        symbol(symbol&& other) noexcept {
+            *this = std::move(other);
+        }
+
+        symbol& operator=(const symbol&) = delete;
+        symbol& operator=(symbol&& other) noexcept {
+            if (this != &other) {
+                move_into_self_from(other);
+                _ptr = other._ptr;
+                other._ptr = nullptr;
+            }
+        }
+
+        ~symbol() noexcept {
+            remove_self();
+        }
+
+        reference operator*() noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+            if (is_valid()) {
+                return *_ptr;
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        const_reference operator*() const noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+            if (is_valid()) {
+                return *_ptr;
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        pointer operator->() noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+            if (is_valid()) {
+                return _ptr;
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        const_pointer operator->() const noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+            if (is_valid()) {
+                return _ptr;
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        reference operator[](std::size_t idx) noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+            if (is_valid()) {
+                return _ptr[idx];
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        const_reference operator[](std::size_t idx)
+            const noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+            if (is_valid()) {
+                return _ptr[idx];
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        bool is_valid() const noexcept {
+            return sym::is_valid() && _ptr;
+        }
+
+        template <typename U>
+        bool share_origin(const symbol<U>& other) const noexcept {
+            return sym::share_origin(other);
+        }
+
+        operator bool() const noexcept {
+            return is_valid();
+        }
+
+        bool operator==(const symbol& rhs) const noexcept {
+            return sym::share_origin(rhs) && sym::compare(rhs) == 0;
+        }
+
+        bool operator<(const symbol& rhs) const noexcept {
+            return sym::share_origin(rhs) && sym::compare(rhs) == -1;
+        }
+
+        bool operator>(const symbol& rhs) const noexcept {
+            return sym::share_origin(rhs) && sym::compare(rhs) == 1;
+        }
+
+    private:
+        friend class unique_shared_lib;
+
+        symbol(pointer ptr, unsigned long long uid, unique_shared_lib* origin)
+            noexcept : _ptr{ptr}, sym{uid, origin} {}
+
+        pointer _ptr;
+    };
+
+    template <typename R, typename... Args>
+    class symbol<R(Args...)> final : private detail::sym {
+    public:
+        using element_type = R(Args...);
+        using pointer = element_type*;
+        using const_pointer = const element_type*;
+        using reference = element_type&;
+        using const_reference = const element_type&;
+
+        symbol() = delete;
+        symbol(const symbol&) = delete;
+        sumbol(symbol&& other) noexcept {
+            *this = std::move(other);
+        }
+
+        symbol& operator=(const symbol&) = delete;
+        symbol& operator=(symbol&& other) noexcept {
+            if (this != &other) {
+                move_into_self_from(other);
+                _f = other._f;
+                other._f = nullptr;
+            }
+        }
+
+        ~symbol() noexcept {
+            remove_self();
+        }
+
+        R operator()(Args... args)
+            noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT &&
+                    noexcept(std::invoke(f, args...))) {
+            if (is_valid()) {
+                return (*f)(args...);
+            } else {
+                REIJI_ON_INVALID_SYMBOL();
+            }
+        }
+
+        bool is_valid() const noexcept {
+            return sym::is_valid() && _ptr;
+        }
+
+        template <typename U>
+        bool share_origin(const symbol<U>& other) const noexcept {
+            return sym::share_origin(other);
+        }
+
+        operator bool() const noexcept {
+            return is_valid();
+        }
+
+
+        bool operator==(const symbol& rhs) const noexcept {
+            return sym::share_origin(rhs) && sym::compare(rhs) == 0;
+        }
+
+        bool operator<(const symbol& rhs) const noexcept {
+            return sym::share_origin(rhs) && sym::compare(rhs) == -1;
+        }
+
+        bool operator>(const symbol& rhs) const noexcept {
+            return sym::share_origin(rhs) && compare(rhs) == 1;
+        }
+    private:
+        friend class unique_shared_lib;
+
+        symbol(pointer f, unsigned long long uid, unique_shared_lib* origin)
+            noexcept : _f{f}, sym{uid, origin} {}
+
+        pointer _f;
+    };
+
+    template <typename T>
+    bool operator!=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
+        return lhs.share_origin(rhs) && !(lhs == rhs)
+    }
+
+    template <typename T>
+    bool operator<=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
+        return lhs.share_origin(rhs) && !(lhs > rhs);
+    }
+
+    template <typename T>
+    bool operator>=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
+        return lhs.share_origin(rhs) && !(lhs < rhs);
+    }
+
+    class unique_shared_lib {
     public:
         unique_shared_lib();
         unique_shared_lib(const unique_shared_lib&) = delete;
@@ -41,34 +327,44 @@ namespace reiji {
         void close();
 
         template<typename T>
-        [[nodiscard]] inline T symbol(const char* sym_name);
+        [[nodiscard]] inline reiji::symbol<T> symbol(const char* sym_name);
         template<typename T>
-        [[nodiscard]] inline T symbol(const std::string& sym_name);
+        [[nodiscard]] inline reiji::symbol<T> symbol(const std::string& sym_name);
 
         [[nodiscard]] std::string error() const;
     private:
-#if defined(_WIN32)
-        using handle_t = ::HMODULE;
-        using symbol_t = ::FARPROC;
-#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)
-        using handle_t = void*;
-        using symbol_t = void*;
-#endif
-        [[nodiscard]] symbol_t _symbol(const char* sym_name);
+        friend class detail::sym;
 
-        handle_t _handle;
+#if defined(_WIN32)
+        using native_handle = ::HMODULE;
+        using native_symbol = ::FARPROC;
+#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)
+        using native_handle = void*;
+        using native_symbol = void*;
+#endif
+
+        [[nodiscard]] native_symbol _symbol(const char* sym_name);
+        std::uint64_t _next_uid() {
+            return ++_curr_uid;
+        }
+
+        native_handle _handle;
+        std::uint64_t _curr_uid {0};
         std::string _error;
+        std::vector<detail::sym*> _symbols;
     };
 
     template<typename T>
-    inline T unique_shared_lib::symbol(const char* sym_name) {
-        static_asssert(std::is_pointer<T>::value,
-            "The type parameter for unique_shared_lib::symbol_as must be a pointer");
-        return reinterpret_cast<T>(_symbol(sym_name));
+    inline symbol<T> unique_shared_lib::symbol(const char* sym_name) {
+        return symbol {
+            reinterpret_cast<T>(_symbol(sym_name)),
+            _next_uid(),
+            this
+        };
     }
 
     template<typename T>
-    inline T unique_shared_lib::symbol(const std::string& sym_name) {
+    inline symbol<T> unique_shared_lib::symbol(const std::string& sym_name) {
         return symbol<T>(sym_name.c_str());
     }
 } // reiji

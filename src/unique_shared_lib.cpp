@@ -18,9 +18,32 @@
 #   error Unsupported platform.
 #endif
 
+#include <algorithm>
 #include <utility> // std::move
 
 namespace reiji {
+
+namespace detail {
+
+void sym::remove_self() {
+    // We can binary search to find ourselves as we always push to the back of
+    // the _symbols vector in unique_shared_lib
+    std::size_t low = 0, high = _origin->_symbols.size() - 1, mid;
+    while (low <= high) {
+        mid = (low + high) / 2;
+        if (_origin->_symbols[mid]->_uid > _uid) {
+            high = mid - 1;
+        } else if (_origin->_symbols[mid]->_uid < _uid) {
+            low = mid + 1;
+        } else {
+            break; // found ourselves!
+        }
+    }
+    _origin->_symbols[mid] = nullptr;
+
+}
+
+}
 
 #if defined(PLATFORM_WINDOWS)
 static inline std::string get_error(DWORD err_code) {
@@ -49,7 +72,7 @@ static inline std::string get_error(DWORD err_code) {
 #endif
 
 unique_shared_lib::unique_shared_lib()
-    : _handle(nullptr), _error() {};
+    : _handle(nullptr), _error() {}
 
 unique_shared_lib::unique_shared_lib(unique_shared_lib&& other) noexcept {
     *this = std::move(other);
@@ -65,6 +88,9 @@ unique_shared_lib& unique_shared_lib::operator=(unique_shared_lib&& other) noexc
 }
 
 unique_shared_lib::~unique_shared_lib() noexcept {
+    if (!_handle) {
+        return;
+    }
     // We ignore any errors that happen in the dtor as I don't see how we'd
     // report them.
 #if defined(PLATFORM_WINDOWS)
@@ -72,6 +98,13 @@ unique_shared_lib::~unique_shared_lib() noexcept {
 #elif defined(PLATFORM_POSIX)
     (void)::dlclose(_handle);
 #endif
+
+    for (std::size_t i = 0; i < _symbols.size(); i++) {
+        if (_symbols[i]) {
+            _symbols[i]->invalidate();
+        }
+    }
+
 }
 
 void unique_shared_lib::open(const char* filename) {
@@ -108,6 +141,10 @@ void unique_shared_lib::open(const char* filename) {
 }
 
 void unique_shared_lib::close() {
+    if (!_handle) {
+        return;
+    }
+
 #if defined(PLATFORM_WINDOWS)
     if(!::FreeLibrary(_handle)) {
         _error = reiji::get_error(::GetLastError());
@@ -121,9 +158,17 @@ void unique_shared_lib::close() {
     _handle = nullptr;
 }
 
-unique_shared_lib::symbol_t unique_shared_lib::_symbol(const char* sym_name) {
+unique_shared_lib::native_symbol unique_shared_lib::_symbol(const char* sym_name) {
+    if (_curr_uid % 10 == 0 && _curr_uid > 0) {
+        // Every so often we want to clean up the _symbols vector of _symbols
+        // that got destroyed before we did
+        _symbols.erase(
+            std::remove(std::begin(_symbols), std::end(_symbols), nullptr),
+            std::end(_symbols));
+    }
+
 #if defined(PLATFORM_WINDOWS)
-    symbol_t ret = ::GetProcAddress(_handle, sym_name);
+    native_symbol ret = ::GetProcAddress(_handle, sym_name);
     if (ret == nullptr) {
         _error = reiji::get_error(::GetLastError());
     }
@@ -131,7 +176,7 @@ unique_shared_lib::symbol_t unique_shared_lib::_symbol(const char* sym_name) {
 #elif defined(PLATFORM_POSIX)
     // This approch to error handling was taken from https://linux.die.net/man/3/dlopen
     ::dlerror();
-    symbol_t ret = ::dlsym(_handle, sym_name);
+    native_symbol ret = ::dlsym(_handle, sym_name);
     auto err = ::dlerror();
     _error = err ? err : _error;
     return ret;
