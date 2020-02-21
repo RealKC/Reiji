@@ -14,33 +14,47 @@
 
 // Customization points for symbol beaviour
 #ifdef REIJI_SYMBOL_THROW_EXCEPTIONS
-#   define REIJI_ON_INVALID_SYMBOL() \
+#   define REIJI_ON_INVALID_SYMBOL(x) \
         do { \
-            throw reiji::bad_symbol_access{}; \
+            throw reiji::bad_symbol_access { \
+                "reiji: error in " #x " (called on invalid symbol" \
+                ", that is a symbol which is either default constructed or " \
+                "outlived its origin)" \
+            }; \
         } while(0)
-#   define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 0
 #elif defined REIJI_SYMBOL_ABORT
 #   include <cstdlib>
-#   define REIJI_ON_INVALID_SYMBOL() \
+#   include <cstdio>
+#   define REIJI_ON_INVALID_SYMBOL(x) \
         do { \
+            std::fputs( \
+                "reiji: error in " #x " (called on invalid symbol" \
+                ", that is a symbol which is either default constructed or " \
+                "outlived its origin)", stderr); \
             std::abort(); \
         } while(0)
-#define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 1
 // if neither macro is defined, we simply check if exceptions are enabled and choose
 // one of the previous models
-#elif defined(__EXCEPTIONS)
-#   define REIJI_ON_INVALID_SYMBOL() \
+#elif defined(__EXCEPTIONS) || defined(_CPPUNWIND) || __cpp_exceptions
+#   define REIJI_ON_INVALID_SYMBOL(x) \
         do { \
-            throw reiji::bad_symbol_access{}; \
+            throw reiji::bad_symbol_access { \
+                "reiji: error in " #x " (called on invalid symbol" \
+                ", that is a symbol which is either default constructed or " \
+                "outlived its origin)" \
+            }; \
         } while(0)
-#   define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 0
 #else
 #   include <cstdlib>
-#   define REIJI_ON_INVALID_SYMBOL() \
+#   include <cstdio>
+#   define REIJI_ON_INVALID_SYMBOL(x) \
         do { \
+            std::fputs( \
+                "reiji: error in " #x " (called on invalid symbol" \
+                ", that is a symbol which is either default constructed or " \
+                "outlived its origin)", stderr); \
             std::abort(); \
         } while(0)
-#define REIJI_SYMBOL_ACCESS_IS_NOEXCEPT 1
 #endif
 
 #include <cstdint>
@@ -103,8 +117,8 @@ private:
 
 class bad_symbol_access : std::runtime_error {
 public:
-    bad_symbol_access()
-        : runtime_error {"Symbols cannot outlive their origin"} {}
+    bad_symbol_access(const char* s)
+        : runtime_error {s} {}
     virtual ~bad_symbol_access() noexcept = default;
 };
 
@@ -117,7 +131,7 @@ public:
     using reference = element_type&;
     using const_reference = const element_type&;
 
-    symbol() = default;
+    symbol() noexcept = default;
     symbol(const symbol&) = delete;
     symbol(symbol&& other) noexcept {
         *this = std::move(other);
@@ -140,7 +154,7 @@ public:
         if (is_valid()) {
             return *_ptr;
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator*);
         }
     }
 
@@ -148,7 +162,7 @@ public:
         if (is_valid()) {
             return *_ptr;
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator*);
         }
     }
 
@@ -156,7 +170,7 @@ public:
         if (is_valid()) {
             return _ptr;
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator->);
         }
     }
 
@@ -164,7 +178,7 @@ public:
         if (is_valid()) {
             return _ptr;
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator->);
         }
     }
 
@@ -172,7 +186,7 @@ public:
         if (is_valid()) {
             return _ptr[idx];
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator[]);
         }
     }
 
@@ -180,7 +194,7 @@ public:
         if (is_valid()) {
             return _ptr[idx];
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator[]);
         }
     }
 
@@ -250,7 +264,7 @@ public:
         if (is_valid()) {
             return (*_f)(args...);
         } else {
-            REIJI_ON_INVALID_SYMBOL();
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<R(Args...)>::operator());
         }
     }
 
