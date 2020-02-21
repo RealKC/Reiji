@@ -218,7 +218,7 @@ public:
         return sym::share_origin(other);
     }
 
-    operator bool() const noexcept {
+    explicit operator bool() const noexcept {
         return is_valid();
     }
 
@@ -306,7 +306,7 @@ public:
         return sym::share_origin(other);
     }
 
-    operator bool() const noexcept {
+    explicit operator bool() const noexcept {
         return is_valid();
     }
 
