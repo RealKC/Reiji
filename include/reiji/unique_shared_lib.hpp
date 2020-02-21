@@ -162,7 +162,7 @@ public:
         if (is_valid()) {
             return *_ptr;
         } else {
-            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator*);
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator* const);
         }
     }
 
@@ -178,7 +178,7 @@ public:
         if (is_valid()) {
             return _ptr;
         } else {
-            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator->);
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator-> const);
         }
     }
 
@@ -194,7 +194,7 @@ public:
         if (is_valid()) {
             return _ptr[idx];
         } else {
-            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator[]);
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<T>::operator[] const);
         }
     }
 
@@ -226,7 +226,7 @@ public:
 private:
     friend class unique_shared_lib;
 
-    symbol(pointer ptr, unsigned long long uid, unique_shared_lib* origin)
+    symbol(pointer ptr, std::uint64_t uid, unique_shared_lib* origin)
         noexcept : _ptr{ptr}, sym{uid, origin} {}
 
     pointer _ptr {nullptr};
@@ -268,6 +268,14 @@ public:
         }
     }
 
+    R operator()(Args... args) const {
+        if (is_valid()) {
+            return (*_f)(args...);
+        } else {
+            REIJI_ON_INVALID_SYMBOL(reiji::symbol<R(Args...)>::operator() const);
+        }
+    }
+
     bool is_valid() const noexcept {
         return sym::is_valid() && _f;
     }
@@ -296,7 +304,7 @@ public:
 private:
     friend class unique_shared_lib;
 
-    symbol(pointer f, unsigned long long uid, unique_shared_lib* origin)
+    symbol(pointer f, std::uint64_t uid, unique_shared_lib* origin)
         noexcept : _f{f}, sym{uid, origin} {}
 
     pointer _f {nullptr};
@@ -316,6 +324,8 @@ template <typename T>
 bool operator>=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
     return lhs.share_origin(rhs) && !(lhs < rhs);
 }
+
+
 class unique_shared_lib {
 public:
     unique_shared_lib();
