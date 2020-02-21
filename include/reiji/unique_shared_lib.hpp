@@ -98,6 +98,11 @@ protected:
         }
     }
 
+    void swap(sym& other) noexcept {
+        std::swap(_uid, other._uid);
+        std::swap(_origin, other._origin);
+    }
+
     bool share_origin(const sym& other) const noexcept {
         return _origin == other._origin;
     }
@@ -198,6 +203,11 @@ public:
         }
     }
 
+    void swap(symbol& other) noexcept {
+        sym::swap(other);
+        std::swap(_ptr, other._ptr);
+    }
+
     bool is_valid() const noexcept {
         return sym::is_valid() && _ptr;
     }
@@ -276,6 +286,11 @@ public:
         }
     }
 
+    void swap(symbol& other) noexcept {
+        sym::swap(other);
+        std::swap(_ptr, other._ptr);
+    }
+
     bool is_valid() const noexcept {
         return sym::is_valid() && _f;
     }
@@ -312,7 +327,7 @@ private:
 
 template <typename T>
 bool operator!=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
-    return lhs.share_origin(rhs) && !(lhs == rhs)
+    return lhs.share_origin(rhs) && !(lhs == rhs);
 }
 
 template <typename T>
@@ -323,6 +338,11 @@ bool operator<=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
 template <typename T>
 bool operator>=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
     return lhs.share_origin(rhs) && !(lhs < rhs);
+}
+
+template <typename T>
+void swap(symbol<T>& lhs, symbol<T>& rhs) noexcept {
+    lhs.swap(rhs);
 }
 
 
@@ -349,6 +369,8 @@ public:
     }
     void close();
 
+    void swap(unique_shared_lib& other);
+
     template<typename T>
     [[nodiscard]]
     inline reiji::symbol<T> symbol(const char* sym_name) noexcept;
@@ -369,7 +391,7 @@ private:
 #endif
 
     [[nodiscard]] native_symbol _symbol(const char* sym_name);
-    std::uint64_t _next_uid() {
+    std::uint64_t _next_uid() noexcept {
         return ++_curr_uid;
     }
 
@@ -391,6 +413,10 @@ inline symbol<T> unique_shared_lib::symbol(const char* sym_name) noexcept {
 template<typename T>
 inline symbol<T> unique_shared_lib::symbol(const std::string& sym_name) noexcept {
     return symbol<T>(sym_name.c_str());
+}
+
+inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
+    lhs.swap(rhs);
 }
 
 } // reiji

@@ -157,6 +157,13 @@ void unique_shared_lib::close() {
     _handle = nullptr;
 }
 
+void unique_shared_lib::swap(unique_shared_lib& other) {
+    std::swap(_handle, other._handle);
+    std::swap(_curr_uid, other._curr_uid);
+    _error.swap(other._error);
+    _symbols.swap(other._symbols);
+}
+
 unique_shared_lib::native_symbol unique_shared_lib::_symbol(const char* sym_name) {
     if (_curr_uid % 10 == 0 && _curr_uid > 0) {
         // Every so often we want to clean up the _symbols vector of _symbols
