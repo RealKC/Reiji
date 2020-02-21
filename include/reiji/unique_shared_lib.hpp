@@ -57,6 +57,10 @@ class unique_shared_lib;
 namespace detail {
     class sym {
     protected:
+        sym() noexcept = default;
+        sym(std::uint64_t uid, reiji::unique_shared_lib* origin)
+            noexcept : _uid{uid}, _origin{origin} {}
+
         void remove_self() noexcept;
         bool is_valid() const noexcept {
             return _uid && _origin;
@@ -68,8 +72,7 @@ namespace detail {
             _origin = other._origin;
             other._origin = nullptr;
         };
-        sym(std::uint64_t uid, reiji::unique_shared_lib* origin)
-            noexcept : _uid{uid}, _origin{origin} {}
+
 
         int compare(const sym& other) const noexcept {
             if (_uid < other._uid) {
@@ -93,8 +96,8 @@ namespace detail {
             _origin = nullptr;
         }
 
-        std::uint64_t _uid;
-        reiji::unique_shared_lib* _origin;
+        std::uint64_t _uid {0};
+        reiji::unique_shared_lib* _origin {nullptr};
     };
 }
 
@@ -114,7 +117,7 @@ namespace detail {
         using reference = element_type&;
         using const_reference = const element_type&;
 
-        symbol() = delete;
+        symbol() = default;
         symbol(const symbol&) = delete;
         symbol(symbol&& other) noexcept {
             *this = std::move(other);
@@ -133,7 +136,7 @@ namespace detail {
             remove_self();
         }
 
-        reference operator*() noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+        reference operator*() {
             if (is_valid()) {
                 return *_ptr;
             } else {
@@ -141,7 +144,7 @@ namespace detail {
             }
         }
 
-        const_reference operator*() const noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+        const_reference operator*() const {
             if (is_valid()) {
                 return *_ptr;
             } else {
@@ -149,7 +152,7 @@ namespace detail {
             }
         }
 
-        pointer operator->() noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+        pointer operator->() {
             if (is_valid()) {
                 return _ptr;
             } else {
@@ -157,7 +160,7 @@ namespace detail {
             }
         }
 
-        const_pointer operator->() const noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+        const_pointer operator->() const {
             if (is_valid()) {
                 return _ptr;
             } else {
@@ -165,7 +168,7 @@ namespace detail {
             }
         }
 
-        reference operator[](std::size_t idx) noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+        reference operator[](std::size_t idx) {
             if (is_valid()) {
                 return _ptr[idx];
             } else {
@@ -173,8 +176,7 @@ namespace detail {
             }
         }
 
-        const_reference operator[](std::size_t idx)
-            const noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT) {
+        const_reference operator[](std::size_t idx) const {
             if (is_valid()) {
                 return _ptr[idx];
             } else {
@@ -213,7 +215,7 @@ namespace detail {
         symbol(pointer ptr, unsigned long long uid, unique_shared_lib* origin)
             noexcept : _ptr{ptr}, sym{uid, origin} {}
 
-        pointer _ptr;
+        pointer _ptr {nullptr};
     };
 
     template <typename R, typename... Args>
@@ -225,7 +227,7 @@ namespace detail {
         using reference = element_type&;
         using const_reference = const element_type&;
 
-        symbol() = delete;
+        symbol() noexcept = default;
         symbol(const symbol&) = delete;
         sumbol(symbol&& other) noexcept {
             *this = std::move(other);
@@ -244,18 +246,16 @@ namespace detail {
             remove_self();
         }
 
-        R operator()(Args... args)
-            noexcept(REIJI_SYMBOL_ACCESS_IS_NOEXCEPT &&
-                    noexcept(std::invoke(f, args...))) {
+        R operator()(Args... args) {
             if (is_valid()) {
-                return (*f)(args...);
+                return (*_f)(args...);
             } else {
                 REIJI_ON_INVALID_SYMBOL();
             }
         }
 
         bool is_valid() const noexcept {
-            return sym::is_valid() && _ptr;
+            return sym::is_valid() && _f;
         }
 
         template <typename U>
@@ -285,7 +285,7 @@ namespace detail {
         symbol(pointer f, unsigned long long uid, unique_shared_lib* origin)
             noexcept : _f{f}, sym{uid, origin} {}
 
-        pointer _f;
+        pointer _f {nullptr};
     };
 
     template <typename T>
@@ -302,7 +302,6 @@ namespace detail {
     bool operator>=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
         return lhs.share_origin(rhs) && !(lhs < rhs);
     }
-
     class unique_shared_lib {
     public:
         unique_shared_lib();

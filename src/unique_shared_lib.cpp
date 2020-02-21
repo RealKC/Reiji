@@ -72,7 +72,7 @@ static inline std::string get_error(DWORD err_code) {
 #endif
 
 unique_shared_lib::unique_shared_lib()
-    : _handle(nullptr), _error() {}
+    : _handle{nullptr}, _error{}, _symbols{}, _curr_uid{0} {} // should we reserve?
 
 unique_shared_lib::unique_shared_lib(unique_shared_lib&& other) noexcept {
     *this = std::move(other);
@@ -83,6 +83,9 @@ unique_shared_lib& unique_shared_lib::operator=(unique_shared_lib&& other) noexc
         _handle = std::move(other._handle);
         other._handle = nullptr;
         _error = std::move(other._error);
+        _symbols = std::move(other._symbols);
+        _curr_uid = std::move(other._curr_uid);
+        other._curr_uid = 0;
     }
     return *this;
 }
@@ -117,6 +120,7 @@ void unique_shared_lib::open(const char* filename) {
     // we cannot use ::LoadLibrary and must instead use ::LoadPackagedLibrary
     int len = ::MultiByteToWideChar(CP_ACP, 0, filename, -1, nullptr, 0);
     auto wfilename = new wchar_t[len];
+    // We should be checking for MBTWC failure somewhere around here?
     (void)::MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, len);
     _handle = ::LoadPackagedLibrary(wfilename, 0);
     delete[] wfilename;
