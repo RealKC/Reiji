@@ -8,8 +8,22 @@
 #define UNIQUE_SHARED_LIB_HPP_INCLUDED_
 
 #if defined(_WIN32)
+//  We should find a way to minimize the amount of stuff we include in this from this header
 #   define WIN32_LEAN_AND_MEAN
 #   include <windows.h>
+#endif
+
+// See if the user has chosen a model for handling invalid symbols
+// and if they haven't choose one ourselves
+#if !defined(REIJI_SYMBOL_THROW_EXCEPTIONS)
+#   if !defined(REIJI_SYMBOL_ABORT) && \
+        (defined(__EXCEPTIONS) || defined(_CPPUNWIND) || __cpp_exceptions)
+#       define REIJI_SYMBOL_THROW_EXCEPTIONS
+#   else
+#       define REIJI_SYMBOL_ABORT
+#   endif
+#elif !defined(REIJI_SYMBOL_ABORT)
+#   define REIJI_SYMBOL_ABORT
 #endif
 
 // Customization points for symbol beaviour
@@ -22,29 +36,7 @@
                 "outlived its origin)" \
             }; \
         } while(0)
-#elif defined REIJI_SYMBOL_ABORT
-#   include <cstdlib>
-#   include <cstdio>
-#   define REIJI_ON_INVALID_SYMBOL(x) \
-        do { \
-            std::fputs( \
-                "reiji: error in " #x " (called on invalid symbol" \
-                ", that is a symbol which is either default constructed or " \
-                "outlived its origin)", stderr); \
-            std::abort(); \
-        } while(0)
-// if neither macro is defined, we simply check if exceptions are enabled and choose
-// one of the previous models
-#elif defined(__EXCEPTIONS) || defined(_CPPUNWIND) || __cpp_exceptions
-#   define REIJI_ON_INVALID_SYMBOL(x) \
-        do { \
-            throw reiji::bad_symbol_access { \
-                "reiji: error in " #x " (called on invalid symbol" \
-                ", that is a symbol which is either default constructed or " \
-                "outlived its origin)" \
-            }; \
-        } while(0)
-#else
+#elif defined(REIJI_SYMBOL_ABORT)
 #   include <cstdlib>
 #   include <cstdio>
 #   define REIJI_ON_INVALID_SYMBOL(x) \
@@ -447,5 +439,7 @@ inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
 }
 
 } // reiji
+
+#undef REIJI_ON_INVALID_SYMBOL
 
 #endif // UNIQUE_SHARED_LIB_HPP_INCLUDED_
