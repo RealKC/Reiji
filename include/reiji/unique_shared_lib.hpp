@@ -58,6 +58,7 @@
 #endif
 
 #include <cstdint>
+#include <cstddef> // std::nullptr_t
 #include <string>
 #include <stdexcept>
 #include <type_traits>
@@ -221,6 +222,11 @@ public:
         return is_valid();
     }
 
+    bool operator==(std::nullptr_t null) const noexcept {
+        (void)null;
+        return _ptr == nullptr;
+    }
+
     bool operator==(const symbol& rhs) const noexcept {
         return sym::share_origin(rhs) && sym::compare(rhs) == 0;
     }
@@ -304,6 +310,10 @@ public:
         return is_valid();
     }
 
+    bool operator==(std::nullptr_t null) const noexcept {
+        (void)null;
+        return _ptr == nullptr;
+    }
 
     bool operator==(const symbol& rhs) const noexcept {
         return sym::share_origin(rhs) && sym::compare(rhs) == 0;
@@ -324,6 +334,23 @@ private:
 
     pointer _f {nullptr};
 };
+
+template <typename T>
+bool operator==(std::nullptr_t null, const symbol<T>& rhs) noexcept {
+    return rhs == null;
+}
+
+template <typename T>
+bool operator!=(const symbol<T>& lhs, std::nullptr_t null) noexcept {
+    (void)null;
+    return !(lhs == nullptr);
+}
+
+template <typename T>
+bool operator!=(std::nullptr_t null, const symbol<T>& rhs) noexcept {
+    (void)null;
+    return !(rhs == nullptr);
+}
 
 template <typename T>
 bool operator!=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
