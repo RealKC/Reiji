@@ -146,14 +146,14 @@ public:
     symbol& operator=(const symbol&) = delete;
     symbol& operator=(symbol&& other) noexcept {
         if (this != &other) {
-            move_into_self_from(other);
+            sym::move_into_self_from(other);
             _ptr = other._ptr;
             other._ptr = nullptr;
         }
     }
 
     ~symbol() noexcept {
-        remove_self();
+        sym::remove_self();
     }
 
     reference operator*() {
@@ -266,14 +266,14 @@ public:
     symbol& operator=(const symbol&) = delete;
     symbol& operator=(symbol&& other) noexcept {
         if (this != &other) {
-            move_into_self_from(other);
+            sym::move_into_self_from(other);
             _f = other._f;
             other._f = nullptr;
         }
     }
 
     ~symbol() noexcept {
-        remove_self();
+        sym::remove_self();
     }
 
     R operator()(Args... args) {
