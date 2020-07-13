@@ -37,7 +37,7 @@ protected:
         return *this;
     }
 
-    void remove_self() noexcept;
+    void remove_self_from_origins_symbol_vector() noexcept;
 
     bool is_valid() const noexcept { return _uid && _origin; }
 
@@ -107,7 +107,9 @@ public:
         return *this;
     }
 
-    ~symbol() noexcept { symbol_base::remove_self(); }
+    ~symbol() noexcept {
+        symbol_base::remove_self_from_origins_symbol_vector();
+    }
 
     reference operator*() {
         if (is_valid()) {
@@ -205,7 +207,9 @@ public:
         return *this;
     }
 
-    ~symbol() noexcept { symbol_base::remove_self(); }
+    ~symbol() noexcept {
+        symbol_base::remove_self_from_origins_symbol_vector();
+    }
 
     R operator()(Args... args) {
         if (is_valid()) {
