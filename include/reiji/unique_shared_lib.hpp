@@ -65,10 +65,15 @@ public:
     void swap(unique_shared_lib& other);
 
     template <typename T>
-    [[nodiscard]] inline reiji::symbol<T> symbol(const char* sym_name) noexcept;
+    [[nodiscard]] symbol<T> get_symbol(const char* symbol_name) noexcept {
+        return symbol<T> {reinterpret_cast<T*>(_symbol(symbol_name)),
+                          _next_uid(), this};
+    }
     template <typename T>
-    [[nodiscard]] inline reiji::symbol<T>
-    symbol(const std::string& sym_name) noexcept;
+    [[nodiscard]] symbol<T>
+    get_symbol(const std::string& symbol_name) noexcept {
+        return get_symbol<T>(symbol_name.c_str())
+    }
 
     [[nodiscard]] std::string error() const;
 
@@ -83,7 +88,7 @@ private:
     using native_symbol = void*;
 #endif
 
-    [[nodiscard]] native_symbol _symbol(const char* sym_name);
+    [[nodiscard]] native_symbol _get_symbol(const char* symbol_name);
     std::uint64_t _next_uid() noexcept { return ++_curr_uid; }
 
     native_handle _handle {nullptr};
@@ -91,17 +96,6 @@ private:
     std::string _error;
     std::vector<detail::symbol_base*> _symbols;
 };
-
-template <typename T>
-inline symbol<T> unique_shared_lib::symbol(const char* sym_name) noexcept {
-    return {reinterpret_cast<T*>(_symbol(sym_name)), _next_uid(), this};
-}
-
-template <typename T>
-inline symbol<T>
-unique_shared_lib::symbol(const std::string& sym_name) noexcept {
-    return symbol<T>(sym_name.c_str());
-}
 
 inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
     lhs.swap(rhs);
