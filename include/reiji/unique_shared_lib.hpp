@@ -65,13 +65,12 @@ public:
     void swap(unique_shared_lib& other);
 
     template <typename T>
-    [[nodiscard]] symbol<T> get_symbol(const char* symbol_name) noexcept {
+    [[nodiscard]] symbol<T> get_symbol(const char* symbol_name) {
         return symbol<T> {reinterpret_cast<T*>(_symbol(symbol_name)),
                           _next_uid(), this};
     }
     template <typename T>
-    [[nodiscard]] symbol<T>
-    get_symbol(const std::string& symbol_name) noexcept {
+    [[nodiscard]] symbol<T> get_symbol(const std::string& symbol_name) {
         return get_symbol<T>(symbol_name.c_str())
     }
 
