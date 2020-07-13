@@ -93,12 +93,12 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
 #    else
     _handle = ::LoadLibraryA(filename);
 #    endif
-    if (_handle == nullptr) {
+    if (not _handle) {
         _error = reiji::get_error(::GetLastError());
     }
 #elif defined(PLATFORM_POSIX)
     _handle = ::dlopen(filename, flags);
-    if (_handle == nullptr) {
+    if (not _handle) {
         auto err = ::dlerror();
         _error   = err ? err : _error;
     }
@@ -106,14 +106,14 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
 }
 
 void unique_shared_lib::close() {
-    if (!_handle) {
+    if (not _handle) {
         return;
     }
 
     _error = "";
 
 #if defined(PLATFORM_WINDOWS)
-    if (!::FreeLibrary(_handle)) {
+    if (not ::FreeLibrary(_handle)) {
         _error = reiji::get_error(::GetLastError());
     }
 #elif defined(PLATFORM_POSIX)
@@ -152,7 +152,7 @@ unique_shared_lib::_get_symbol(const char* sym_name) {
 
 #if defined(PLATFORM_WINDOWS)
     native_symbol ret = ::GetProcAddress(_handle, sym_name);
-    if (ret == nullptr) {
+    if (not ret) {
         _error = reiji::get_error(::GetLastError());
     }
     return ret;

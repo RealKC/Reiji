@@ -157,9 +157,9 @@ public:
 
     explicit operator bool() const noexcept { return is_valid(); }
 
-    bool operator!() const noexcept { return !is_valid(); }
+    bool operator!() const noexcept { return not is_valid(); }
 
-    bool operator==(std::nullptr_t) const noexcept { return !_ptr; }
+    bool operator==(std::nullptr_t) const noexcept { return not _ptr; }
 
     bool operator==(const symbol& rhs) const noexcept {
         return symbol_base::shares_origin_with(rhs)
@@ -247,9 +247,9 @@ public:
 
     explicit operator bool() const noexcept { return is_valid(); }
 
-    bool operator!() const noexcept { return !is_valid(); }
+    bool operator!() const noexcept { return not is_valid(); }
 
-    bool operator==(std::nullptr_t) const noexcept { return !_f; }
+    bool operator==(std::nullptr_t) const noexcept { return not _f; }
 
     bool operator==(const symbol& rhs) const noexcept {
         return symbol_base::shares_origin_with(rhs)
@@ -281,22 +281,22 @@ bool operator==(std::nullptr_t null, const symbol<T>& rhs) noexcept {
 
 template <typename T>
 bool operator!=(std::nullptr_t null, const symbol<T>& rhs) noexcept {
-    return !(rhs == nullptr);
+    return not(rhs == nullptr);
 }
 
 template <typename T>
 bool operator!=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
-    return lhs.shares_origin_with(rhs) && !(lhs == rhs);
+    return lhs.shares_origin_with(rhs) && not(lhs == rhs);
 }
 
 template <typename T>
 bool operator<=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
-    return lhs.shares_origin_with(rhs) && !(lhs > rhs);
+    return lhs.shares_origin_with(rhs) && not(lhs > rhs);
 }
 
 template <typename T>
 bool operator>=(const symbol<T>& lhs, const symbol<T>& rhs) noexcept {
-    return lhs.shares_origin_with(rhs) && !(lhs < rhs);
+    return lhs.shares_origin_with(rhs) && not(lhs < rhs);
 }
 
 template <typename T>
