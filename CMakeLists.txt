@@ -4,7 +4,7 @@ project(reiji VERSION 0.1.0 LANGUAGES CXX)
 # Thanks Pablo Arias for writing this excellent article:
 # https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
 
-add_library(reiji src/unique_shared_lib.cpp)
+add_library(reiji src/unique_shared_lib.cpp src/symbol.cpp)
 
 # Target properties
 target_include_directories(reiji
@@ -12,6 +12,8 @@ target_include_directories(reiji
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
+target_compile_features(reiji PUBLIC cxx_std_17)
 
 target_link_libraries(reiji
     PUBLIC
