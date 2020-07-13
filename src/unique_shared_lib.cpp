@@ -25,22 +25,24 @@ namespace reiji {
 
 #if defined(PLATFORM_WINDOWS)
 static inline std::string get_error(DWORD err_code) {
+    class deferred_local_free final {
+        deferred_local_free(void* p) noexcept : _p {p} {}
+        ~deferred_local_free() noexcept { ::LocalFree(_p); }
+
+    private:
+        void* _p;
+    };
+
     ::LPSTR buf     = nullptr;
     std::size_t len = ::FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
             | FORMAT_MESSAGE_IGNORE_INSERTS,
         nullptr, err_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (::LPSTR)&buf, 0, nullptr);
-    try {
-        std::string error(buf, len);
-        ::LocalFree(buf);
-        return error;
-    } catch (...) {
-        // In case std::string's constructor throws an exception, we make sure
-        // to not leak resources and rethrow the exception.
-        ::LocalFree(buf);
-        throw;
-    }
+    deferred_local_free dlf {buf};
+
+    std::string error {buf, len};
+    return error;
 }
 #endif
 
