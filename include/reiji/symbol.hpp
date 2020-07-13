@@ -157,6 +157,8 @@ public:
 
     explicit operator bool() const noexcept { return is_valid(); }
 
+    bool operator!() const noexcept { return !is_valid(); }
+
     bool operator==(std::nullptr_t) const noexcept { return !_ptr; }
 
     bool operator==(const symbol& rhs) const noexcept {
@@ -244,6 +246,8 @@ public:
     }
 
     explicit operator bool() const noexcept { return is_valid(); }
+
+    bool operator!() const noexcept { return !is_valid(); }
 
     bool operator==(std::nullptr_t) const noexcept { return !_f; }
 
