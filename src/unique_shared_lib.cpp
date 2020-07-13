@@ -66,6 +66,15 @@ unique_shared_lib::~unique_shared_lib() noexcept {
 }
 
 void unique_shared_lib::open(const char* filename) {
+#if defined(PLATFORM_WINDOWS)
+    // FIXME: Make open(name, flags) care for flags on windows.
+    open(filename, 0);
+#elif defined(PLATFORM_POSIX)
+    open(filename, RTLD_LAZY | RTLD_GLOBAL);
+#endif
+}
+
+void unique_shared_lib::open(const char* filename, flags_type flags) {
     if (_handle) {
         close();
     }
@@ -86,7 +95,7 @@ void unique_shared_lib::open(const char* filename) {
         _error = reiji::get_error(::GetLastError());
     }
 #elif defined(PLATFORM_POSIX)
-    _handle = ::dlopen(filename, RTLD_LAZY | RTLD_GLOBAL);
+    _handle = ::dlopen(filename, flags);
     if (_handle == nullptr) {
         auto err = ::dlerror();
         _error   = err ? err : _error;
