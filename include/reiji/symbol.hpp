@@ -22,8 +22,7 @@ namespace detail {
 class symbol_base {
 protected:
     symbol_base() noexcept = default;
-    symbol_base(std::uint64_t uid, reiji::unique_shared_lib* origin) noexcept
-        : _uid {uid}, _origin {origin} {}
+    symbol_base(std::uint64_t uid, reiji::unique_shared_lib* origin);
 
     symbol_base(symbol_base&) = delete;
     symbol_base& operator=(symbol_base&) = delete;
@@ -179,7 +178,7 @@ public:
 private:
     friend class unique_shared_lib;
 
-    symbol(pointer ptr, std::uint64_t uid, unique_shared_lib* origin) noexcept
+    symbol(pointer ptr, std::uint64_t uid, unique_shared_lib* origin)
         : _ptr {ptr}, symbol_base {uid, origin} {}
 
     pointer _ptr {nullptr};
@@ -268,7 +267,7 @@ public:
 private:
     friend class unique_shared_lib;
 
-    symbol(pointer f, std::uint64_t uid, unique_shared_lib* origin) noexcept
+    symbol(pointer f, std::uint64_t uid, unique_shared_lib* origin)
         : _f {f}, symbol_base {uid, origin} {}
 
     pointer _f {nullptr};

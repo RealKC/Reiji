@@ -66,12 +66,12 @@ public:
 
     template <typename T>
     [[nodiscard]] symbol<T> get_symbol(const char* symbol_name) {
-        return symbol<T> {reinterpret_cast<T*>(_symbol(symbol_name)),
+        return symbol<T> {reinterpret_cast<T*>(_get_symbol(symbol_name)),
                           _next_uid(), this};
     }
     template <typename T>
     [[nodiscard]] symbol<T> get_symbol(const std::string& symbol_name) {
-        return get_symbol<T>(symbol_name.c_str())
+        return get_symbol<T>(symbol_name.c_str());
     }
 
     [[nodiscard]] std::string error() const;

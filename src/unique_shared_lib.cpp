@@ -25,7 +25,7 @@ namespace reiji {
 
 #if defined(PLATFORM_WINDOWS)
 static inline std::string get_error(DWORD err_code) {
-    class deferred_local_free final {
+    struct deferred_local_free final {
         deferred_local_free(void* p) noexcept : _p {p} {}
         ~deferred_local_free() noexcept { ::LocalFree(_p); }
 
