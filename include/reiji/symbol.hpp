@@ -30,9 +30,9 @@ protected:
     symbol_base(symbol_base&& other) noexcept { *this = std::move(other); }
 
     symbol_base& operator=(symbol_base&& other) noexcept {
-        _uid    = other._uid;
-        _origin = other._origin;
-        other._invalidate();
+        // Lack of self assignment protection is intentional
+        _uid    = std::exchange(other._uid, 0);
+        _origin = std::exchange(other._origin, nullptr);
         return *this;
     }
 
@@ -98,12 +98,11 @@ public:
 
     symbol& operator=(symbol&& other) noexcept {
         if (this != &other) {
-            symbol_base::operator=(std::move(other));
+            _ptr = std::exchange(other._ptr, nullptr);
 
-            _ptr       = other._ptr;
-            other._ptr = nullptr;
+            return static_cast<symbol&>(
+                symbol_base::operator=(std::move(other)));
         }
-        return *this;
     }
 
     ~symbol() noexcept {
@@ -202,12 +201,11 @@ public:
 
     symbol& operator=(symbol&& other) noexcept {
         if (this != &other) {
-            symbol_base::operator=(std::move(other));
+            _f = std::exchange(other._f, nullptr);
 
-            _f       = other._f;
-            other._f = nullptr;
+            return static_cast<symbol&>(
+                symbol_base::operator=(std::move(other)));
         }
-        return *this;
     }
 
     ~symbol() noexcept {

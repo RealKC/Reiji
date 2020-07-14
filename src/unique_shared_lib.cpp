@@ -19,7 +19,7 @@
 #endif
 
 #include <algorithm>   // std::remove
-#include <utility>     // std::move
+#include <utility>     // std::move, std::exchange
 
 namespace reiji {
 
@@ -53,12 +53,10 @@ unique_shared_lib::unique_shared_lib(unique_shared_lib&& other) noexcept {
 unique_shared_lib&
 unique_shared_lib::operator=(unique_shared_lib&& other) noexcept {
     if (this != &other) {
-        _handle         = std::move(other._handle);
-        other._handle   = nullptr;
-        _error          = std::move(other._error);
-        _symbols        = std::move(other._symbols);
-        _curr_uid       = std::move(other._curr_uid);
-        other._curr_uid = 0;
+        _handle   = std::exchange(other._handle, nullptr);
+        _error    = std::move(other._error);
+        _symbols  = std::move(other._symbols);
+        _curr_uid = std::exchange(other._curr_uid, 0);
     }
     return *this;
 }

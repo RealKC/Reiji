@@ -101,6 +101,6 @@ inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
 
 }   // namespace reiji
 
-#include <reiji/detail/pop_platform_detection_macros.hpp
+#include <reiji/detail/pop_platform_detection_macros.hpp>
 
 #endif   // UNIQUE_SHARED_LIB_HPP_INCLUDED_
