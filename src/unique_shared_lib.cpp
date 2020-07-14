@@ -4,26 +4,26 @@
 // (See accompanying file LICENSE.txt or copy at
 // https://www.boost.org/LICENSE_1_0.txt)
 
+// Disable clang-format so it doesn't reorder these headers
+// clang-format off
 #include <reiji/unique_shared_lib.hpp>
+#include <reiji/detail/push_platform_detection_macros.hpp>
+// clang-format on
 
-#if defined(_WIN32)
-#    define PLATFORM_WINDOWS 1
+#if REIJI_PLATFORM_WINDOWS
 #    include <cstddef>   // std::size_t
 #    include <new>
 #    include <windows.h>
-#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)
-#    define PLATFORM_POSIX 1
+#elif REIJI_PLATFORM_POSIX
 #    include <dlfcn.h>
-#else
-#    error Unsupported platform.
 #endif
 
-#include <algorithm>
-#include <utility>   // std::move
+#include <algorithm>   // std::remove
+#include <utility>     // std::move
 
 namespace reiji {
 
-#if defined(PLATFORM_WINDOWS)
+#if REIJI_PLATFORM_WINDOWS
 static inline std::string get_error(DWORD err_code) {
     struct deferred_local_free final {
         deferred_local_free(void* p) noexcept : _p {p} {}
@@ -68,10 +68,10 @@ unique_shared_lib::~unique_shared_lib() noexcept {
 }
 
 void unique_shared_lib::open(const char* filename) {
-#if defined(PLATFORM_WINDOWS)
+#if REIJI_PLATFORM_WINDOWS
     // FIXME: Make open(name, flags) care for flags on windows.
     open(filename, 0);
-#elif defined(PLATFORM_POSIX)
+#elif REIJI_PLATFORM_POSIX
     open(filename, RTLD_LAZY | RTLD_GLOBAL);
 #endif
 }
@@ -80,7 +80,7 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
     if (_handle) {
         close();
     }
-#if defined(PLATFORM_WINDOWS)
+#if REIJI_PLATFORM_WINDOWS
 #    if WINVER > 0x603 && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
     // On Windows 8 and above, we might be compiled for a Metro/UWP app where
     // we cannot use ::LoadLibrary and must instead use ::LoadPackagedLibrary
@@ -96,7 +96,7 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
     if (not _handle) {
         _error = reiji::get_error(::GetLastError());
     }
-#elif defined(PLATFORM_POSIX)
+#elif REIJI_PLATFORM_POSIX
     _handle = ::dlopen(filename, flags);
     if (not _handle) {
         auto err = ::dlerror();
@@ -112,11 +112,11 @@ void unique_shared_lib::close() {
 
     _error = "";
 
-#if defined(PLATFORM_WINDOWS)
+#if REIJI_PLATFORM_WINDOWS
     if (not ::FreeLibrary(_handle)) {
         _error = reiji::get_error(::GetLastError());
     }
-#elif defined(PLATFORM_POSIX)
+#elif REIJI_PLATFORM_POSIX
     if (::dlclose(_handle)) {
         auto err = ::dlerror();
         _error   = err ? err : "";
@@ -150,13 +150,13 @@ unique_shared_lib::_get_symbol(const char* sym_name) {
                        _symbols.end());
     }
 
-#if defined(PLATFORM_WINDOWS)
+#if REIJI_PLATFORM_WINDOWS
     native_symbol ret = ::GetProcAddress(_handle, sym_name);
     if (not ret) {
         _error = reiji::get_error(::GetLastError());
     }
     return ret;
-#elif defined(PLATFORM_POSIX)
+#elif REIJI_PLATFORM_POSIX
     // This approch to error handling was taken from
     // https://linux.die.net/man/3/dlopen
     ::dlerror();

@@ -6,27 +6,26 @@
 #ifndef UNIQUE_SHARED_LIB_HPP_INCLUDED_
 #define UNIQUE_SHARED_LIB_HPP_INCLUDED_
 
-#if defined(_WIN32)
-//  We should find a way to minimize the amount of stuff we include in this from
-//  this header
-#    define WIN32_LEAN_AND_MEAN
-#    include <windows.h>
-#endif
-
 #include <cstddef>   // std::nullptr_t
 #include <cstdint>   // std::uint64_t
 #include <string>
 #include <vector>
 
+#include <reiji/detail/push_platform_detection_macros.hpp>
 #include <reiji/symbol.hpp>
+
+#if REIJI_PLATFORM_WINDOWS
+#    define WIN32_LEAN_AND_MEAN
+#    include <windows.h>
+#endif
 
 namespace reiji {
 
 class unique_shared_lib {
 public:
-#if defined(_WIN32)
-    using flags_type = unsigned long;   // aka what DWORD is typedef'd to
-#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)
+#if REIJI_PLATFORM_WINDOWS
+    using flags_type = ::DWORD;
+#elif REIJI_PLATFORM_POSIX
     using flags_type    = int;   // what is used on *nix's iirc
 #endif
 
@@ -79,10 +78,10 @@ public:
 private:
     friend class detail::symbol_base;
 
-#if defined(_WIN32)
+#if REIJI_PLATFORM_WINDOWS
     using native_handle = ::HMODULE;
     using native_symbol = ::FARPROC;
-#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)
+#elif REIJI_PLATFORM_POSIX
     using native_handle = void*;
     using native_symbol = void*;
 #endif
@@ -102,6 +101,6 @@ inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
 
 }   // namespace reiji
 
-#undef REIJI_ON_INVALID_SYMBOL
+#include <reiji/detail/pop_platform_detection_macros.hpp
 
 #endif   // UNIQUE_SHARED_LIB_HPP_INCLUDED_
