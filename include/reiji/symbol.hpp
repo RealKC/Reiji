@@ -272,13 +272,18 @@ private:
 };
 
 template <typename T>
-bool operator==(std::nullptr_t null, const symbol<T>& rhs) noexcept {
-    return rhs == null;
+bool operator==(std::nullptr_t, const symbol<T>& rhs) noexcept {
+    return rhs == nullptr;
 }
 
 template <typename T>
-bool operator!=(std::nullptr_t null, const symbol<T>& rhs) noexcept {
-    return not(rhs == nullptr);
+bool operator!=(const symbol<T>& lhs, std::nulptr_t) noexcept {
+    return not(lhs == nullptr);
+}
+
+template <typename T>
+bool operator!=(std::nullptr_t, const symbol<T>& rhs) noexcept {
+    return rhs != nullptr;
 }
 
 template <typename T>
