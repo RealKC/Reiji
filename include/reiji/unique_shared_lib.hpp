@@ -73,7 +73,7 @@ public:
         return get_symbol<T>(symbol_name.c_str());
     }
 
-    [[nodiscard]] std::string error() const;
+    [[nodiscard]] std::string last_error() const { return _error; }
 
 private:
     friend class detail::symbol_base;
