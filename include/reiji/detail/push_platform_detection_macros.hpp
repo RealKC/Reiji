@@ -12,5 +12,5 @@
 #    define REIJI_PLATFORM_WINDOWS 0
 #    define REIJI_PLATFORM_POSIX   1
 #else
-#error "Unsupported platform. (Maybe send a PR?)"
+#    error "Unsupported platform. (Maybe send a PR?)"
 #endif
