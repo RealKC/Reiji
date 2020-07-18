@@ -1,19 +1,15 @@
-name: CMake
+name: Windows
 
 on: [push, pull_request]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
-  LD_LIBRARY_PATH: ${{runner.workspace}}/build/tests
 
 jobs:
   build:
 
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macOS-latest]
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v1
