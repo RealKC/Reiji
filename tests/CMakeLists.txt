@@ -13,6 +13,7 @@ add_subdirectory(doctest)
 add_executable(reijitests main.cpp symbol.cpp usl.cpp)
 target_link_libraries(reijitests doctest)
 target_link_libraries(reijitests reiji)
+target_compile_features(reijitests PRIVATE cxx_std_17)
 add_dependencies(reiji lib1 lib2)
 
 include(doctest/scripts/cmake/doctest.cmake)
