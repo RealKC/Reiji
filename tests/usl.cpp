@@ -7,13 +7,13 @@
 
 #if defined(__APPLE__)
 #    define LIB1_NAME "liblib1.dylib"
-#    define LIB2_NAME  "liblib2.dylib"
+#    define LIB2_NAME "liblib2.dylib"
 #elif REIJI_PLATFORM_POSIX
 #    define LIB1_NAME "liblib1.so"
-#    define LIB2_NAME  "liblib2.so"
+#    define LIB2_NAME "liblib2.so"
 #elif REIJI_PLATFORM_WINDOWS
 #    define LIB1_NAME "lib1.dll"
-#    define LIB2_NAME  "lib2.dll"
+#    define LIB2_NAME "lib2.dll"
 #endif
 
 TEST_SUITE("unique_shared_lib behaviour") {
@@ -30,10 +30,13 @@ TEST_SUITE("unique_shared_lib behaviour") {
     TEST_CASE("unique_shared_lib is able to return symbols _that exist_ fine") {
         reiji::unique_shared_lib lib;
         lib.open(LIB1_NAME);
+        WARN(lib.last_error() == "");
         auto bar = lib.get_symbol<int>("bar");
+        WARN(lib.last_error() == "");
         REQUIRE_NOTHROW(*bar);
         REQUIRE(*bar == 5);
         auto ibar = lib.get_symbol<int()>("increase_bar_and_return_it");
+        WARN(lib.last_error() == "");
         REQUIRE_NOTHROW(ibar());   // this call increased bar to 6
         REQUIRE(ibar() == 7);
     }

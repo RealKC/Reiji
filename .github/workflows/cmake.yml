@@ -5,6 +5,7 @@ on: [push, pull_request]
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
+  LD_LIBRARY_PATH: ${{runner.workspace}}/build/tests
 
 jobs:
   build:
