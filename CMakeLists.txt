@@ -4,6 +4,10 @@ project(reiji VERSION 0.1.0 LANGUAGES CXX)
 # Thanks Pablo Arias for writing this excellent article:
 # https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
 
+if(MSVC)
+    target_compile_options(reiji PUBLIC "/permisive-")
+endif()
+
 add_library(reiji src/unique_shared_lib.cpp src/symbol.cpp)
 
 # Target properties

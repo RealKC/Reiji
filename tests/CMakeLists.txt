@@ -16,5 +16,9 @@ target_link_libraries(reijitests reiji)
 target_compile_features(reijitests PRIVATE cxx_std_17)
 add_dependencies(reiji lib1 lib2)
 
+if(MSVC)
+    target_compile_options(reijitests PUBLIC "/permisive-")
+endif()
+
 include(doctest/scripts/cmake/doctest.cmake)
 doctest_discover_tests(reijitests)
