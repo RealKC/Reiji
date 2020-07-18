@@ -141,6 +141,13 @@ void unique_shared_lib::swap(unique_shared_lib& other) {
 
 unique_shared_lib::native_symbol
 unique_shared_lib::_get_symbol(const char* sym_name) {
+    if (not _handle) {
+        using namespace std::string_literals;
+        _error = "Cannot load symbol '"s + sym_name
+                 + "' when no library was opened.";
+        return nullptr;
+    }
+
     if (_curr_uid % 10 == 0 && _curr_uid > 0) {
         // Every so often we want to clean up the _symbols vector of _symbols
         // that got destroyed before we did
