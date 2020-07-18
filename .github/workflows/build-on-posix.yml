@@ -23,7 +23,7 @@ jobs:
       # We'll use this as our working directory for all subsequent commands
       run: |
         git submodule update --init --recursive
-        export LD_LIBRARY_PATH="$(pwd)/build/tests"
+        export LD_LIBRARY_PATH="${{runner.workspace}}/build/tests"
         cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
