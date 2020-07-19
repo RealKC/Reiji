@@ -21,6 +21,10 @@ jobs:
       run: |
         git submodule update --init --recursive
         export LD_LIBRARY_PATH="${{runner.workspace}}/build/tests"
+        echo \n DEBUG NOISE \n $LD_LIBRARY_PATH \n
+        echo \n "${{runner.workspace}}/build/tests" \n
+        ls "${{runner.workspace}}/build/tests"
+        echo \n END DEBUG NOISE \n
         cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
