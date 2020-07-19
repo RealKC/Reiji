@@ -20,10 +20,6 @@ jobs:
       # We'll use this as our working directory for all subsequent commands
       run: |
         git submodule update --init --recursive
-        export LD_LIBRARY_PATH="${{runner.workspace}}/build/tests"
-        echo \\n DEBUG NOISE \\n $LD_LIBRARY_PATH \\n
-        echo \\n "${{runner.workspace}}/build/tests" \\n
-        echo \\n END DEBUG NOISE \\n
         cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
@@ -49,4 +45,6 @@ jobs:
       shell: bash
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -j2 -C $BUILD_TYPE -T test --output-on-failure
+      run: |
+        export LD_LIBRARY_PATH="${{runner.workspace}}/build/tests"
+        ctest -j2 -C $BUILD_TYPE -T test --output-on-failure
