@@ -79,7 +79,7 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
         close();
     }
 #if REIJI_PLATFORM_WINDOWS
-#    if WINVER > 0x603 && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+#    if WINVER > 0x602 && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
     // On Windows 8 and above, we might be compiled for a Metro/UWP app where
     // we cannot use ::LoadLibrary and must instead use ::LoadPackagedLibrary
     int len        = ::MultiByteToWideChar(CP_ACP, 0, filename, -1, nullptr, 0);
