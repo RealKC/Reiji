@@ -9,8 +9,8 @@
 #    define LIB1_NAME "liblib1.dylib"
 #    define LIB2_NAME "liblib2.dylib"
 #elif REIJI_PLATFORM_POSIX
-#    define LIB1_NAME "./tests/liblib1.so"
-#    define LIB2_NAME "./tests/liblib2.so"
+#    define LIB1_NAME "liblib1.so"
+#    define LIB2_NAME "liblib2.so"
 #elif REIJI_PLATFORM_WINDOWS
 #    define LIB1_NAME "lib1.dll"
 #    define LIB2_NAME "lib2.dll"
