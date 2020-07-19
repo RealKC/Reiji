@@ -21,10 +21,9 @@ jobs:
       run: |
         git submodule update --init --recursive
         export LD_LIBRARY_PATH="${{runner.workspace}}/build/tests"
-        echo \n DEBUG NOISE \n $LD_LIBRARY_PATH \n
-        echo \n "${{runner.workspace}}/build/tests" \n
-        ls "${{runner.workspace}}/build/tests"
-        echo \n END DEBUG NOISE \n
+        echo \\n DEBUG NOISE \\n $LD_LIBRARY_PATH \\n
+        echo \\n "${{runner.workspace}}/build/tests" \\n
+        echo \\n END DEBUG NOISE \\n
         cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
@@ -41,7 +40,9 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build . --config $BUILD_TYPE
+      run: |
+        cmake --build . --config $BUILD_TYPE
+        ls "${{runner.workspace}}/build/tests"
 
     - name: Test
       working-directory: ${{runner.workspace}}/build
