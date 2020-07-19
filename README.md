@@ -1,5 +1,7 @@
 # Reiji
 
+![Windows](https://github.com/RealKC/Reiji/workflows/Windows/badge.svg) ![Linux](https://github.com/RealKC/Reiji/workflows/Linux/badge.svg) ![MacOS](https://github.com/RealKC/Reiji/workflows/MacOS/badge.svg)
+
 Reiji is a C++ library that abstracts away the platform-specific code for loading a shared library at runtime.
 
 ## Documentation
