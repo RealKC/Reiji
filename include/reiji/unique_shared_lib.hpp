@@ -21,6 +21,9 @@
 
 namespace reiji {
 
+/**
+  \brief A class representing a shared library
+ */
 class unique_shared_lib {
 public:
 #if REIJI_PLATFORM_WINDOWS
@@ -33,15 +36,29 @@ public:
 
     unique_shared_lib(const unique_shared_lib&) = delete;
     unique_shared_lib(unique_shared_lib&&) noexcept;
-
+    /**
+      \brief Opens a shared library on construction, same semantics as \ref
+      unique_shared_lib::open(const char*)
+     */
     explicit unique_shared_lib(const char* filename) { open(filename); }
+    /**
+      \brief Opens a shared library on construction, same semantics as \ref
+      unique_shared_lib::open(const char*)
+     */
     explicit unique_shared_lib(const std::string& filename) {
         open(filename.c_str());
     }
-
+    /**
+      \brief Opens a shared library, passing the \a flags to the low level
+      APIs
+     */
     unique_shared_lib(const char* filename, flags_type flags) {
         open(filename, flags);
     }
+    /**
+      \brief Opens a shared library, passing the \a flags to the low level
+      APIs
+     */
     unique_shared_lib(const std::string& filename, flags_type flags) {
         open(filename.c_str(), flags);
     }
@@ -51,28 +68,71 @@ public:
 
     ~unique_shared_lib() noexcept;
 
+    /**
+      \brief Opens a shared library
+
+      Behaves like LoadLibrary on Windows, and like
+      dlopen(\a filename, RTLD_LAZY | RTLD_GLOBAL) on POSIX platforms
+     */
     void open(const char* filename);
+    /**
+      \brief Opens a shared library, passing the \a flags to the low level
+      APIs
+     */
     void open(const char* filename, flags_type flags);
-
+    /**
+      \brief Opens a shared library, same semantics as
+      \ref unique_shared_lib::open(const char*)
+     */
     void open(const std::string& filename) { open(filename.c_str()); }
+    /**
+      \brief Opens a shared library, same semantics as
+      \ref unique_shared_lib::open(const char*, flags_type)
+     */
     void open(const std::string& filename, flags_type flags) {
-        open(filename.c_str());
+        open(filename.c_str(), flags);
     }
-
+    /**
+      \brief Closes the shared library
+     */
     void close();
-
+    /**
+      \brief Swaps two unique_shared_lib's
+    */
     void swap(unique_shared_lib& other);
-
+    /**
+      \brief Extracts a symbol from the shared library, will fail if no
+      library is open \tparam T The type of the symbol as it is found in the
+      shared library, i.e. for a global variable \rst ``int foo;`` ``T``
+      will be ``int``, and for a function ``int bar(int, short)``  it will be
+      ``int(int, short)`` \endrst \returns An invalid symbol if the symbol
+      isn't found, or no library is open, or the symbol from the library.
+     */
     template <typename T>
     [[nodiscard]] symbol<T> get_symbol(const char* symbol_name) {
         return symbol<T> {reinterpret_cast<T*>(_get_symbol(symbol_name)),
                           _next_uid(), this};
     }
+    /**
+      \brief Extracts a symbol from the shared library, will fail if no
+      library is open
+
+      Same semantics as \ref unique_shared_lib::get_symbol(const char*)
+     */
     template <typename T>
     [[nodiscard]] symbol<T> get_symbol(const std::string& symbol_name) {
         return get_symbol<T>(symbol_name.c_str());
     }
+    /**
+      \brief Returns the last error, or an empty string if no error occured.
 
+      \rst
+      .. note::
+
+         The last error will be reset if an operation completes
+         successfully.
+       \endrst
+     */
     [[nodiscard]] std::string last_error() const { return _error; }
 
 private:
@@ -95,6 +155,9 @@ private:
     std::vector<detail::symbol_base*> _symbols;
 };
 
+/**
+  \brief Swaps two unique_shared_lib's
+ */
 inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
     lhs.swap(rhs);
 }

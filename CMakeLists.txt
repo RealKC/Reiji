@@ -27,6 +27,9 @@ target_link_libraries(reiji
 enable_testing()
 add_subdirectory(tests)
 
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+add_subdirectory(docs)
+
 # Installation instructions
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/Reiji)
