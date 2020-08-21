@@ -53,6 +53,7 @@ unique_shared_lib::unique_shared_lib(unique_shared_lib&& other) noexcept {
 unique_shared_lib&
 unique_shared_lib::operator=(unique_shared_lib&& other) noexcept {
     if (this != &other) {
+        close();
         _handle   = std::exchange(other._handle, nullptr);
         _error    = std::move(other._error);
         _symbols  = std::move(other._symbols);
