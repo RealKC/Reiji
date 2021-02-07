@@ -118,7 +118,7 @@ void unique_shared_lib::open(const fs::path& path, flags_type flags) {
     _handle = reinterpret_cast<void*>(::LoadPackagedLibrary(path.c_str(), 0));
 #    else
     _handle = reinterpret_cast<void*>(
-        ::LoadLibraryExW(path.c_str(), nullptr, static_cast<::DWORD>(flags)))
+        ::LoadLibraryExW(path.c_str(), nullptr, static_cast<::DWORD>(flags)));
 #    endif
     if (not _handle) {
         _error = reiji::get_error(::GetLastError());
