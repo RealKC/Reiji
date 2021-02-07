@@ -182,8 +182,8 @@ unique_shared_lib::_get_symbol(const char* sym_name) {
     }
 
 #if REIJI_PLATFORM_WINDOWS
-    native_symbol ret =
-        reinterpret_cast<void*>(::GetProcAddress(_handle, sym_name));
+    native_symbol ret = reinterpret_cast<void*>(
+        ::GetProcAddress(reinterpret_cast<HMODULE>(_handle), sym_name));
     if (not ret) {
         _error = reiji::get_error(::GetLastError());
     }
