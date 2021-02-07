@@ -8,7 +8,8 @@
 #if defined(_WIN32)
 #    define REIJI_PLATFORM_WINDOWS 1
 #    define REIJI_PLATFORM_POSIX   0
-#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)            \
+    || defined(__HAIKU__)
 #    define REIJI_PLATFORM_WINDOWS 0
 #    define REIJI_PLATFORM_POSIX   1
 #else
