@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <reiji/detail/push_platform_detection_macros.hpp>
+#include <reiji/flags.hpp>
 #include <reiji/symbol.hpp>
 
 namespace reiji {
@@ -21,16 +22,6 @@ namespace fs = std::filesystem;
 
 class unique_shared_lib {
 public:
-#if REIJI_PLATFORM_WINDOWS
-    // Definition taken from
-    // <https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
-    // Webarchive
-    // <https://web.archive.org/web/20210128143152/https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
-    using flags_type = unsigned long;
-#elif REIJI_PLATFORM_POSIX
-    using flags_type = int;   // what is used on *nix's iirc
-#endif
-
     unique_shared_lib() = default;
 
     unique_shared_lib(const unique_shared_lib&) = delete;

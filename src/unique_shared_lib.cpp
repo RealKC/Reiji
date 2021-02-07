@@ -30,6 +30,12 @@
 namespace reiji {
 
 #if REIJI_PLATFORM_WINDOWS
+static auto constexpr default_flags = flags_type {0};
+#elif REIJI_PLATFORM_POSIX
+static auto constexpr default_flags = posix::rtld_lazy | posix::rtld_global;
+#endif
+
+#if REIJI_PLATFORM_WINDOWS
 static inline std::string get_error(DWORD err_code) {
     struct deferred_local_free final {
         deferred_local_free(void* p) noexcept : _p {p} {}
@@ -73,12 +79,7 @@ unique_shared_lib::~unique_shared_lib() noexcept {
 }
 
 void unique_shared_lib::open(const char* filename) {
-#if REIJI_PLATFORM_WINDOWS
-    // FIXME: Make open(name, flags) care for flags on windows.
-    open(filename, 0);
-#elif REIJI_PLATFORM_POSIX
-    open(filename, RTLD_LAZY | RTLD_GLOBAL);
-#endif
+    open(filename, default_flags);
 }
 
 void unique_shared_lib::open(const char* filename, flags_type flags) {
@@ -87,6 +88,8 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
     }
 #if REIJI_PLATFORM_WINDOWS
 #    if REIJI_ON_UWP
+    (void)flags;   // As far as I can see, we can't pass flags to
+                   // LoadPackagedLibrary in UWP
     // On Windows 8 and above, we might be compiled for a Metro/UWP app where
     // we cannot use ::LoadLibrary and must instead use ::LoadPackagedLibrary
     int len        = ::MultiByteToWideChar(CP_ACP, 0, filename, -1, nullptr, 0);
@@ -96,7 +99,8 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
     _handle = reinterpret_cast<void*>(::LoadPackagedLibrary(wfilename, 0));
     delete[] wfilename;
 #    else
-    _handle = reinterpret_cast<void*>(::LoadLibraryA(filename));
+    _handle = reinterpret_cast<void*>(
+        ::LoadLibraryExA(filename, nullptr, static_cast<::DWORD>(flags)));
 #    endif
     if (not _handle) {
         _error = reiji::get_error(::GetLastError());
@@ -111,12 +115,7 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
 }
 
 void unique_shared_lib::open(const fs::path& path) {
-#if REIJI_PLATFORM_WINDOWS
-    // FIXME: Proper flags
-    open(path, 0);
-#elif REIJI_PLATFORM_POSIX
-    open(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
-#endif
+    open(path, default_flags);
 }
 
 void unique_shared_lib::open(const fs::path& path, flags_type flags) {
@@ -128,9 +127,12 @@ void unique_shared_lib::open(const fs::path& path, flags_type flags) {
     // On windows, path::c_str returns a wchar_t*, which is good as it means we
     // don't have to do any conversions
 #    if REIJI_ON_UWP
+    (void)flags;   // As far as I can see, we can't pass flags to
+                   // LoadPackagedLibrary in UWP
     _handle = reinterpret_cast<void*>(::LoadPackagedLibrary(path.c_str(), 0));
 #    else
-    _handle = reinterpret_cast<void*>(::LoadLibraryW(path.c_str()))
+    _handle = reinterpret_cast<void*>(
+        ::LoadLibraryExW(path.c_str(), nullptr, static_cast<::DWORD>(flags)))
 #    endif
     if (not _handle) {
         _error = reiji::get_error(::GetLastError());
