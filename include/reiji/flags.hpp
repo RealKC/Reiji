@@ -110,6 +110,14 @@ constexpr static auto rltd_local                          = flags_type {0};
 #endif
 }   // namespace posix
 
+namespace detail {
+#if REIJI_PLATFORM_WINDOWS
+static auto constexpr default_flags = flags_type {0};
+#elif REIJI_PLATFORM_POSIX
+static auto constexpr default_flags = posix::rtld_lazy | posix::rtld_global;
+#endif
+}   // namespace detail
+
 }   // namespace reiji
 
 #include <reiji/detail/pop_platform_detection_macros.hpp>

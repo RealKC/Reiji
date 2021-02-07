@@ -30,12 +30,6 @@
 namespace reiji {
 
 #if REIJI_PLATFORM_WINDOWS
-static auto constexpr default_flags = flags_type {0};
-#elif REIJI_PLATFORM_POSIX
-static auto constexpr default_flags = posix::rtld_lazy | posix::rtld_global;
-#endif
-
-#if REIJI_PLATFORM_WINDOWS
 static inline std::string get_error(DWORD err_code) {
     struct deferred_local_free final {
         deferred_local_free(void* p) noexcept : _p {p} {}
@@ -78,10 +72,6 @@ unique_shared_lib::~unique_shared_lib() noexcept {
     close();
 }
 
-void unique_shared_lib::open(const char* filename) {
-    open(filename, default_flags);
-}
-
 void unique_shared_lib::open(const char* filename, flags_type flags) {
     if (_handle) {
         close();
@@ -112,10 +102,6 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
         _error   = err ? err : _error;
     }
 #endif
-}
-
-void unique_shared_lib::open(const fs::path& path) {
-    open(path, default_flags);
 }
 
 void unique_shared_lib::open(const fs::path& path, flags_type flags) {

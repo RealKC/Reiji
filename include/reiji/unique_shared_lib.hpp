@@ -27,11 +27,15 @@ public:
     unique_shared_lib(const unique_shared_lib&) = delete;
     unique_shared_lib(unique_shared_lib&&) noexcept;
 
-    explicit unique_shared_lib(const char* filename) { open(filename); }
-    explicit unique_shared_lib(const std::string& filename) {
-        open(filename.c_str());
+    explicit unique_shared_lib(const char* filename) {
+        open(filename, detail::default_flags);
     }
-    explicit unique_shared_lib(const fs::path& path) { open(path); }
+    explicit unique_shared_lib(const std::string& filename) {
+        open(filename.c_str(), detail::default_flags);
+    }
+    explicit unique_shared_lib(const fs::path& path) {
+        open(path, detail::default_flags);
+    }
 
     unique_shared_lib(const char* filename, flags_type flags) {
         open(filename, flags);
@@ -48,16 +52,18 @@ public:
 
     ~unique_shared_lib() noexcept;
 
-    void open(const char* filename);
+    void open(const char* filename) { open(filename, detail::default_flags); }
     void open(const char* filename, flags_type flags);
 
-    void open(const std::string& filename) { open(filename.c_str()); }
+    void open(const std::string& filename) {
+        open(filename.c_str(), detail::default_flags);
+    }
     void open(const std::string& filename, flags_type flags) {
         open(filename.c_str());
     }
 
-    void open(const fs::path&);
-    void unique_shared_lib::open(const fs::path& path, flags_type flags);
+    void open(const fs::path& path) { open(path, detail::default_flags); }
+    void open(const fs::path& path, flags_type flags);
 
     void close();
 
