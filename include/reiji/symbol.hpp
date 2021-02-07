@@ -103,6 +103,8 @@ public:
             return static_cast<symbol&>(
                 symbol_base::operator=(std::move(other)));
         }
+
+        return *this;
     }
 
     ~symbol() noexcept {
