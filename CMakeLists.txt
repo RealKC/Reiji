@@ -6,6 +6,10 @@ project(reiji VERSION 0.1.0 LANGUAGES CXX)
 
 add_library(reiji src/unique_shared_lib.cpp src/symbol.cpp)
 
+if(MSVC)
+    target_compile_options(reiji PUBLIC "/permissive-")
+endif()
+
 # Target properties
 target_include_directories(reiji
     PUBLIC
