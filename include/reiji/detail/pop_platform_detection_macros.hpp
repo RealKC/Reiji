@@ -5,11 +5,5 @@
 
 // Lack of include guards intentional
 
-#if defined(REIJI_PLATFORM_WINDOWS) && (defined(_MSC_VER) && !defined(__GCC__))
-#    ifdef not
-#        undef not
-#    endif
-#endif
-
 #undef REIJI_PLATFORM_WINDOWS
 #undef REIJI_PLATFORM_POSIX
