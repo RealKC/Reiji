@@ -8,6 +8,11 @@
 #if defined(_WIN32)
 #    define REIJI_PLATFORM_WINDOWS 1
 #    define REIJI_PLATFORM_POSIX   0
+#    if defined(_MSC_VER) && !defined(__GCC__)
+#        define not                                                            \
+            !   // MSVC is broken and doesn't define this keyword, so we take
+                // matters in our own hands
+#    endif
 #elif defined(__linux__) || defined(__APPLE__) || defined(__unix__)            \
     || defined(__HAIKU__)
 #    define REIJI_PLATFORM_WINDOWS 0

@@ -7,3 +7,6 @@
 
 #undef REIJI_PLATFORM_WINDOWS
 #undef REIJI_PLATFORM_POSIX
+#ifdef not
+#    undef not
+#endif
