@@ -87,10 +87,10 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
     auto wfilename = new wchar_t[len];
     // We should be checking for MBTWC failure somewhere around here?
     (void)::MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, len);
-    _handle = ::LoadPackagedLibrary(wfilename, 0);
+    _handle = reinterpret_cast<void*>(::LoadPackagedLibrary(wfilename, 0));
     delete[] wfilename;
 #    else
-    _handle = ::LoadLibraryA(filename);
+    _handle = reinterpret_cast<void*>(::LoadLibraryA(filename));
 #    endif
     if (not _handle) {
         _error = reiji::get_error(::GetLastError());
@@ -112,7 +112,7 @@ void unique_shared_lib::close() {
     _error = "";
 
 #if REIJI_PLATFORM_WINDOWS
-    if (not ::FreeLibrary(_handle)) {
+    if (not ::FreeLibrary(reinterpret_cast<::HMODULE>(_handle))) {
         _error = reiji::get_error(::GetLastError());
     }
 #elif REIJI_PLATFORM_POSIX
@@ -157,7 +157,7 @@ unique_shared_lib::_get_symbol(const char* sym_name) {
     }
 
 #if REIJI_PLATFORM_WINDOWS
-    native_symbol ret = ::GetProcAddress(_handle, sym_name);
+    native_symbol ret = reinterpret_cast<void*>(::GetProcAddress(_handle, sym_name));
     if (not ret) {
         _error = reiji::get_error(::GetLastError());
     }

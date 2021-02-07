@@ -14,19 +14,16 @@
 #include <reiji/detail/push_platform_detection_macros.hpp>
 #include <reiji/symbol.hpp>
 
-#if REIJI_PLATFORM_WINDOWS
-#    define WIN32_LEAN_AND_MEAN
-#    include <windows.h>
-#endif
-
 namespace reiji {
 
 class unique_shared_lib {
 public:
 #if REIJI_PLATFORM_WINDOWS
-    using flags_type = ::DWORD;
+    // Definition taken from <https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
+    // Webarchive <https://web.archive.org/web/20210128143152/https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
+    using flags_type = unsigned long;
 #elif REIJI_PLATFORM_POSIX
-    using flags_type    = int;   // what is used on *nix's iirc
+    using flags_type = int;   // what is used on *nix's iirc
 #endif
 
     unique_shared_lib() = default;
@@ -78,13 +75,9 @@ public:
 private:
     friend class detail::symbol_base;
 
-#if REIJI_PLATFORM_WINDOWS
-    using native_handle = ::HMODULE;
-    using native_symbol = ::FARPROC;
-#elif REIJI_PLATFORM_POSIX
+    // It *should* be fine for these to be void* on all the platforms we support, I think.
     using native_handle = void*;
     using native_symbol = void*;
-#endif
 
     [[nodiscard]] native_symbol _get_symbol(const char* symbol_name);
     std::uint64_t _next_uid() noexcept { return ++_curr_uid; }
