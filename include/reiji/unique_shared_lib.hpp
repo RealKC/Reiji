@@ -3,8 +3,7 @@
 // (See accompanying file LICENSE.txt or copy at
 // https://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef UNIQUE_SHARED_LIB_HPP_INCLUDED_
-#define UNIQUE_SHARED_LIB_HPP_INCLUDED_
+#pragma once
 
 #include <cstddef>   // std::nullptr_t
 #include <cstdint>   // std::uint64_t
@@ -105,5 +104,3 @@ inline void swap(unique_shared_lib& lhs, unique_shared_lib& rhs) noexcept {
 }   // namespace reiji
 
 #include <reiji/detail/pop_platform_detection_macros.hpp>
-
-#endif   // UNIQUE_SHARED_LIB_HPP_INCLUDED_
