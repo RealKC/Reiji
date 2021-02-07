@@ -81,7 +81,7 @@ constexpr static auto load_with_altered_search_path = flags_type {0x00000008ul};
 constexpr static auto load_library_require_signed_target =
     flags_type {0x00000080ul};
 constexpr static auto load_library_safe_current_dirs =
-    flags_type {0x00002000ul} l
+    flags_type {0x00002000ul};
 #else
 constexpr static auto load_ignore_code_authz_level        = flags_type {0ul};
 constexpr static auto load_library_search_application_dir = flags_type {0ul};
