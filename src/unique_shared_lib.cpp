@@ -14,6 +14,12 @@
 #    include <cstddef>   // std::size_t
 #    include <new>
 #    include <windows.h>
+#    if WINVER > 0x602 && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)        \
+        && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#        define REIJI_ON_UWP 1
+#    else
+#        define REIJI_ON_UWP 0
+#    endif
 #elif REIJI_PLATFORM_POSIX
 #    include <dlfcn.h>
 #endif
@@ -80,7 +86,7 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
         close();
     }
 #if REIJI_PLATFORM_WINDOWS
-#    if WINVER > 0x602 && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#    if REIJI_ON_UWP
     // On Windows 8 and above, we might be compiled for a Metro/UWP app where
     // we cannot use ::LoadLibrary and must instead use ::LoadPackagedLibrary
     int len        = ::MultiByteToWideChar(CP_ACP, 0, filename, -1, nullptr, 0);
@@ -101,6 +107,37 @@ void unique_shared_lib::open(const char* filename, flags_type flags) {
         auto err = ::dlerror();
         _error   = err ? err : _error;
     }
+#endif
+}
+
+void unique_shared_lib::open(const fs::path& path) {
+#if REIJI_PLATFORM_WINDOWS
+    // FIXME: Proper flags
+    open(path, 0);
+#elif REIJI_PLATFORM_POSIX
+    open(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+#endif
+}
+
+void unique_shared_lib::open(const fs::path& path, flags_type flags) {
+    if (_handle) {
+        close();
+    }
+
+#if REIJI_PLATFORM_WINDOWS
+    // On windows, path::c_str returns a wchar_t*, which is good as it means we
+    // don't have to do any conversions
+#    if REIJI_ON_UWP
+    _handle = reinterpret_cast<void*>(::LoadPackagedLibrary(path.c_str(), 0));
+#    else
+    _handle = reinterpret_cast<void*>(::LoadLibraryW(path.c_str()))
+#    endif
+    if (not _handle) {
+        _error = reiji::get_error(::GetLastError());
+    }
+#elif REIJI_PLATFORM_POSIX
+    // We can fall back on the (char*, flags_type) overload on POSIX platforms
+    open(path.c_str(), flags);
 #endif
 }
 
@@ -157,7 +194,8 @@ unique_shared_lib::_get_symbol(const char* sym_name) {
     }
 
 #if REIJI_PLATFORM_WINDOWS
-    native_symbol ret = reinterpret_cast<void*>(::GetProcAddress(_handle, sym_name));
+    native_symbol ret =
+        reinterpret_cast<void*>(::GetProcAddress(_handle, sym_name));
     if (not ret) {
         _error = reiji::get_error(::GetLastError());
     }

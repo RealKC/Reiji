@@ -8,6 +8,7 @@
 
 #include <cstddef>   // std::nullptr_t
 #include <cstdint>   // std::uint64_t
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -16,11 +17,15 @@
 
 namespace reiji {
 
+namespace fs = std::filesystem;
+
 class unique_shared_lib {
 public:
 #if REIJI_PLATFORM_WINDOWS
-    // Definition taken from <https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
-    // Webarchive <https://web.archive.org/web/20210128143152/https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
+    // Definition taken from
+    // <https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
+    // Webarchive
+    // <https://web.archive.org/web/20210128143152/https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types>
     using flags_type = unsigned long;
 #elif REIJI_PLATFORM_POSIX
     using flags_type = int;   // what is used on *nix's iirc
@@ -35,12 +40,16 @@ public:
     explicit unique_shared_lib(const std::string& filename) {
         open(filename.c_str());
     }
+    explicit unique_shared_lib(const fs::path& path) { open(path); }
 
     unique_shared_lib(const char* filename, flags_type flags) {
         open(filename, flags);
     }
     unique_shared_lib(const std::string& filename, flags_type flags) {
         open(filename.c_str(), flags);
+    }
+    unique_shared_lib(const fs::path& path, flags_type flags) {
+        open(path, flags);
     }
 
     unique_shared_lib& operator=(const unique_shared_lib&) = delete;
@@ -55,6 +64,9 @@ public:
     void open(const std::string& filename, flags_type flags) {
         open(filename.c_str());
     }
+
+    void open(const fs::path&);
+    void unique_shared_lib::open(const fs::path& path, flags_type flags);
 
     void close();
 
@@ -75,7 +87,8 @@ public:
 private:
     friend class detail::symbol_base;
 
-    // It *should* be fine for these to be void* on all the platforms we support, I think.
+    // It *should* be fine for these to be void* on all the platforms we
+    // support, I think.
     using native_handle = void*;
     using native_symbol = void*;
 
